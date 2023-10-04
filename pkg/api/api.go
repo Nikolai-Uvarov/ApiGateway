@@ -35,6 +35,7 @@ func (api *API) endpoints() {
 	api.r.HandleFunc("/news/latest", api.posts).Methods(http.MethodGet, http.MethodOptions)
 	api.r.HandleFunc("/news/filter", api.filter).Methods(http.MethodGet, http.MethodOptions)
 	api.r.HandleFunc("/news/post", api.postByID).Methods(http.MethodGet, http.MethodOptions)
+	api.r.HandleFunc("/news/comment", api.addComment).Methods(http.MethodPost, http.MethodOptions)
 	//заголовок ответа
 	api.r.Use(api.HeadersMiddleware)
 }
@@ -147,4 +148,20 @@ func (api *API) postByID(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-//метод добавления комментария  - скопировать из сервиса комментариев после его разработки
+// метод добавления комментария
+// Принимает ID новости postID или ID родительского комментария commentID и текст комментария в теле запроса
+func (api *API) addComment(w http.ResponseWriter, r *http.Request) {
+
+	var c obj.Comment
+	err := json.NewDecoder(r.Body).Decode(&c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	//тут отправка запроса на создание комментария  в сервис комментариев, пока мок
+	log.Println("New comment:", c)
+
+	// Отправка клиенту статуса успешного выполнения запроса
+	w.WriteHeader(http.StatusOK)
+}
