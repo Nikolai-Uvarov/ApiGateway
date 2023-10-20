@@ -2,6 +2,7 @@ package api
 
 import (
 	"APIGateway/pkg/obj"
+	"APIGateway/pkg/gate"
 	"encoding/json"
 	"log"
 
@@ -70,11 +71,14 @@ func (api *API) posts(w http.ResponseWriter, r *http.Request) {
 	} else {
 		page = 1
 	}
-	// Получение данных из сервиса новостей или из кеша - пока замокано
-	posts := ShortNews
-	log.Println(page)
+	// Получение данных из сервиса новостей
+	o, err:=gate.GetLatestNews(page)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	// Отправка данных клиенту в формате JSON.
-	json.NewEncoder(w).Encode(posts)
+	json.NewEncoder(w).Encode(o)
 	// Отправка клиенту статуса успешного выполнения запроса
 	w.WriteHeader(http.StatusOK)
 }
@@ -159,9 +163,12 @@ func (api *API) addComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//тут отправка запроса на создание комментария  в сервис комментариев, пока мок
-	log.Println("New comment:", c)
-
+	//тут отправка запроса на создание комментария  в сервис комментариев
+	err = gate.PostComment(c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	// Отправка клиенту статуса успешного выполнения запроса
 	w.WriteHeader(http.StatusOK)
 }
