@@ -94,7 +94,7 @@ var FullNews = []obj.NewsFullDetailed{
 		Content: "Не менее важные события произошли с не менее важными людьми при не менее необычных обстоятельствах",
 		PubTime: 1696349770,
 		Link:    "www.kommersant.ru",
-		Comment: obj.Comment{}},
+		Comment: []obj.Comment{}},
 }
 
 var ShortNews = []obj.NewsShortDetailed{
@@ -144,10 +144,15 @@ func (api *API) postByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Получение данных из сервиса новостей или из кеша - пока замокано
-	post := FullNews[0]
-	log.Println(id)
+
+	n,err:=gate.GetDetailedPost(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	// Отправка данных клиенту в формате JSON.
-	json.NewEncoder(w).Encode(post)
+	json.NewEncoder(w).Encode(n)
 	// Отправка клиенту статуса успешного выполнения запроса
 	w.WriteHeader(http.StatusOK)
 }

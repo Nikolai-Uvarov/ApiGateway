@@ -8,7 +8,7 @@ type NewsFullDetailed struct {
 	Content string // содержание публикации
 	PubTime int64  // время публикации
 	Link    string // ссылка на источник
-	Comment Comment
+	Comment []Comment
 }
 
 type NewsShortDetailed struct {
