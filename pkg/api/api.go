@@ -4,7 +4,6 @@ import (
 	"APIGateway/pkg/obj"
 	"APIGateway/pkg/gate"
 	"encoding/json"
-	//"log"
 
 	"net/http"
 	"strconv"
@@ -165,7 +164,7 @@ func (api *API) addComment(w http.ResponseWriter, r *http.Request) {
 	//тут отправка запроса на создание комментария  в сервис комментариев
 	data, err := gate.PostComment(r.Context(),c)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	json.NewEncoder(w).Encode(data)

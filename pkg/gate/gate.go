@@ -15,6 +15,7 @@ import (
 const (
 	newsAggregator  = "http://localhost:8080"
 	commentsService = "http://localhost:9595"
+	cersorService = "http://localhost:8787"
 )
 
 // делает запрос в сервис новостей и возвращает массив новостей
@@ -45,11 +46,34 @@ func GetLatestNews(ctx context.Context, p int) (any, error) {
 
 func PostComment(ctx context.Context, c obj.Comment) (any, error) {
 
-	b, err := json.Marshal(c)
+	//запрос в сервис цензор для выяснения допустимости добавления комментария
+
+	var t= struct{ Text string }{
+		Text: c.Text,
+	}
+
+	b, err := json.Marshal(t)
 	if err != nil {
 		return nil, err
 	}
 	buf := bytes.NewBuffer(b)
+
+	rr, err := http.Post(cersorService+"/check"+"?requestID="+getRequestID(ctx), "application/json", buf)
+	if err != nil {
+		return nil, err
+	}
+	defer rr.Body.Close()
+	// Проверяем код ответа.
+	if !(rr.StatusCode == http.StatusOK) {
+		return nil, fmt.Errorf("код ответ сервиса цензурирования при попытке создать комментарий: %d", rr.StatusCode)
+	}
+	
+	//запрос в сервис комментариев для добавления комментария
+	b, err = json.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	buf = bytes.NewBuffer(b)
 
 	r, err := http.Post(commentsService+"/add"+"?requestID="+getRequestID(ctx), "application/json", buf)
 	if err != nil {
