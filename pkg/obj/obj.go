@@ -1,6 +1,9 @@
 // objects to interact with db data-model
 package obj
 
+
+type ContextKey string
+
 // тип obj.Post для операций с БД
 type NewsFullDetailed struct {
 	ID      int    // номер записи
@@ -29,3 +32,10 @@ type Comment struct {
 //NewsFullDetailed - поля Post + дерево комментов
 //NewsShortDetailed - не все поля Post
 //Comment
+
+type Pagination struct {
+	Page int  //текущая страница
+	Of int    //всего страниц
+	PostsPerPage int   //PostsPerPage
+}
+

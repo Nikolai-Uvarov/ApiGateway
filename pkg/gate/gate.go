@@ -3,6 +3,7 @@ package gate
 import (
 	"APIGateway/pkg/obj"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -158,4 +159,47 @@ type commentsResponse struct{
 type postResponse struct{
 	post *obj.NewsFullDetailed
 	err error
+}
+
+//запрашивает сервис аггрегатора новостей с поисковым запросом
+func SearchPosts(ctx context.Context, searchParam string, pageParam string) (any, error){
+	
+	RequestID:= strconv.Itoa(ctx.Value(obj.ContextKey("requestID")).(int))
+	
+	reqStr:= newsAggregator + "/news?requestID="+RequestID
+
+	if searchParam!=""{
+		reqStr += "&search="+ searchParam
+	}
+	
+	if pageParam!=""{
+		reqStr += "&page="+ pageParam
+	}
+
+	r, err := http.Get(reqStr)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	// Читаем тело ответа.
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Раскодируем JSON в массив новостей + объект пагинации+ id запроса.
+
+	var data = struct{
+		Posts []obj.NewsShortDetailed
+		Pagination obj.Pagination
+		RequestID any
+	}{}
+
+	err = json.Unmarshal(b, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
 }

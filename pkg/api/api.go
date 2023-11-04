@@ -4,7 +4,7 @@ import (
 	"APIGateway/pkg/obj"
 	"APIGateway/pkg/gate"
 	"encoding/json"
-	"log"
+	//"log"
 
 	"net/http"
 	"strconv"
@@ -34,19 +34,13 @@ func (api *API) Router() *mux.Router {
 func (api *API) endpoints() {
 	// получить n последних новостей
 	api.r.HandleFunc("/news/latest", api.posts).Methods(http.MethodGet, http.MethodOptions)
-	api.r.HandleFunc("/news/filter", api.filter).Methods(http.MethodGet, http.MethodOptions)
+	api.r.HandleFunc("/news/search", api.search).Methods(http.MethodGet, http.MethodOptions)
 	api.r.HandleFunc("/news/post", api.postByID).Methods(http.MethodGet, http.MethodOptions)
 	api.r.HandleFunc("/news/comment", api.addComment).Methods(http.MethodPost, http.MethodOptions)
 	//заголовок ответа
 	api.r.Use(api.HeadersMiddleware)
-}
-
-// HeadersMiddleware устанавливает заголовки ответа сервера.
-func (api *API) HeadersMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		next.ServeHTTP(w, r)
-	})
+	api.r.Use(api.RequestIDMiddleware)
+	api.r.Use(api.LoggingMiddleware)
 }
 
 // posts возвращает n-ую страницу (страница = 10 постов) новейших новостей в зависимости от параметра page=n
@@ -114,19 +108,19 @@ var ShortNews = []obj.NewsShortDetailed{
 // dateafter, datebefore = UNIX time -  выбор диапазона дат,
 // notcontains = слово -  слова в заголовке, которые исключить,
 // sort = date/name - выбор поля для сортировки (по дате, по названию).
-func (api *API) filter(w http.ResponseWriter, r *http.Request) {
+func (api *API) search(w http.ResponseWriter, r *http.Request) {
 	// Считывание параметров фильтра page строки запроса.
-	containsParam := r.URL.Query().Get("contains")
-	notcontainsParam := r.URL.Query().Get("notcontains")
-	dafterParam := r.URL.Query().Get("dateafter")
-	dbeforeParam := r.URL.Query().Get("datebefore")
-	sortParam := r.URL.Query().Get("sort")
+	searchParam := r.URL.Query().Get("search")
+	pageParam := r.URL.Query().Get("page")
 
-	// Получение данных из сервиса новостей или из кеша - пока замокано
-	posts := ShortNews
-	log.Println(containsParam, notcontainsParam, dafterParam, dbeforeParam, sortParam)
+	// Получение данных из сервиса новостей 
+	ans, err := gate.SearchPosts(r.Context(),searchParam,pageParam)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	// Отправка данных клиенту в формате JSON.
-	json.NewEncoder(w).Encode(posts)
+	json.NewEncoder(w).Encode(ans)
 	// Отправка клиенту статуса успешного выполнения запроса
 	w.WriteHeader(http.StatusOK)
 }
