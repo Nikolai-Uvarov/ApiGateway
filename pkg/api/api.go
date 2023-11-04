@@ -66,7 +66,7 @@ func (api *API) posts(w http.ResponseWriter, r *http.Request) {
 		page = 1
 	}
 	// Получение данных из сервиса новостей
-	o, err:=gate.GetLatestNews(page)
+	o, err:=gate.GetLatestNews(r.Context(), page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -137,9 +137,9 @@ func (api *API) postByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получение данных из сервиса новостей или из кеша - пока замокано
+	// Получение данных из сервиса новостей и сервиса комментариев
 
-	n,err:=gate.GetDetailedPost(id)
+	n,err:=gate.GetDetailedPost(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
