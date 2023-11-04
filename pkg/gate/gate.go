@@ -43,24 +43,39 @@ func GetLatestNews(ctx context.Context, p int) (any, error) {
 	return data, nil
 }
 
-func PostComment(c obj.Comment) error {
+func PostComment(ctx context.Context, c obj.Comment) (any, error) {
 
 	b, err := json.Marshal(c)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	buf := bytes.NewBuffer(b)
 
-	r, err := http.Post(commentsService+"/add", "application/json", buf)
+	r, err := http.Post(commentsService+"/add"+"?requestID="+getRequestID(ctx), "application/json", buf)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer r.Body.Close()
 	// Проверяем код ответа.
 	if !(r.StatusCode == http.StatusOK) {
-		return fmt.Errorf("код ответ сервиса комментариев при попытке создать новый: %d", r.StatusCode)
+		return nil, fmt.Errorf("код ответ сервиса комментариев при попытке создать новый: %d", r.StatusCode)
 	}
-	return nil
+	var data = struct{
+		RequestID any
+	}{}
+
+	// Читаем тело ответа.
+	b, err = io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(b, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 func GetComments(ctx context.Context, id int) ([]obj.Comment, error) {
