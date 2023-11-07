@@ -1,4 +1,4 @@
-// objects to interact with db data-model
+// objects of data-model
 package obj
 
 
@@ -29,9 +29,8 @@ type Comment struct {
 	Answers   []Comment //Ответы на данный комментарий
 }
 
-//NewsFullDetailed - поля Post + дерево комментов
+//NewsFullDetailed - поля Post сервиса новостей + дерево комментов
 //NewsShortDetailed - не все поля Post
-//Comment
 
 type Pagination struct {
 	Page int  //текущая страница

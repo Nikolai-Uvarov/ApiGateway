@@ -1,3 +1,4 @@
+//api сервера
 package api
 
 import (

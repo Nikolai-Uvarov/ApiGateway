@@ -1,6 +1,5 @@
+//MiddleWare для поддержки сквозного id запроса, логгирования и установки заголовков ответа
 package api
-
-//MiddleWare
 
 import (
 	"APIGateway/pkg/obj"

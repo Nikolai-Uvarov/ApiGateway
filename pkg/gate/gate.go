@@ -1,3 +1,4 @@
+//запросы к микросервисам системы новостного агрегатора: NewsAgg, Censor, Comments
 package gate
 
 import (
@@ -44,6 +45,7 @@ func GetLatestNews(ctx context.Context, p int) (any, error) {
 	return data, nil
 }
 
+//запрос для добавления нового комментария
 func PostComment(ctx context.Context, c obj.Comment) (any, error) {
 
 	//запрос в сервис цензор для выяснения допустимости добавления комментария
@@ -102,6 +104,7 @@ func PostComment(ctx context.Context, c obj.Comment) (any, error) {
 	return data, nil
 }
 
+//запрос для получения комментариев к новости
 func GetComments(ctx context.Context, id int) ([]obj.Comment, error) {
 	r, err := http.Get(commentsService + "/comments?postID=" + strconv.Itoa(id)+"&requestID="+getRequestID(ctx))
 	if err != nil {
@@ -127,6 +130,7 @@ func GetComments(ctx context.Context, id int) ([]obj.Comment, error) {
 	return data.Comments, nil
 }
 
+//запрос для получения новости
 func GetPost(ctx context.Context, id int) (*obj.NewsFullDetailed, error) {
 	r, err := http.Get(newsAggregator + "/news?postID=" + strconv.Itoa(id)+"&requestID="+getRequestID(ctx))
 	if err != nil {
@@ -259,6 +263,7 @@ func SearchPosts(ctx context.Context, searchParam string, pageParam string) (any
 	return &data, nil
 }
 
+//получение requestID из контекста 
 func getRequestID(ctx context.Context) string {
 	return strconv.Itoa(ctx.Value(obj.ContextKey("requestID")).(int))
 }
