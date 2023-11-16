@@ -6,14 +6,16 @@ WORKDIR /go/src/apigateway/cmd
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 
 FROM alpine:latest
-#LABEL version="1.0.0"
-#LABEL maintainer="Ivan Ivanov<test@test.ru>"
+
 WORKDIR /root/
 COPY --from=compiling /go/src/apigateway/cmd/app .
-#ARG dbhost=192.168.1.35:5432/apigateway
-#ENV dbhost="${dbhost}"
-#ARG dbpass=to_be_redefined_at_conrainer_start
-#ENV dbpass="${dbpass}"
-#ENTRYPOINT ./website
+#default endpoints (may be redefined at gateway container start)
+ARG newsAggregator=http://192.168.1.4:8080
+ENV newsAggregator="${newsAggregator}"
+ARG	commentsService=http://192.168.1.4:9595
+ENV commentsService="${commentsService}"
+ARG	cersorService=http://192.168.1.4:8787
+ENV cersorService="${cersorService}"
+
 CMD ["./app"]
 EXPOSE 8080

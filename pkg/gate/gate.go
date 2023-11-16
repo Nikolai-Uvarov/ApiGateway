@@ -1,4 +1,4 @@
-//запросы к микросервисам системы новостного агрегатора: NewsAgg, Censor, Comments
+// запросы к микросервисам системы новостного агрегатора: NewsAgg, Censor, Comments
 package gate
 
 import (
@@ -9,18 +9,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 )
 
-const (
-	newsAggregator  = "http://localhost:8080"
-	commentsService = "http://localhost:9595"
-	cersorService = "http://localhost:8787"
-)
-
 // делает запрос в сервис новостей и возвращает массив новостей
 func GetLatestNews(ctx context.Context, p int) (any, error) {
+	//получаем из окружения адрес агрегатора новостей
+	newsAggregator := os.Getenv("newsAggregator")
+	//запрашиваем агрегатор
 	r, err := http.Get(newsAggregator + "/news/" + strconv.Itoa(p*15) + "?requestID=" + getRequestID(ctx))
 	if err != nil {
 		return nil, err
@@ -60,6 +58,9 @@ func PostComment(ctx context.Context, c obj.Comment) (any, error) {
 	}
 	buf := bytes.NewBuffer(b)
 
+	//получаем из окружения адрес цензора
+	cersorService := os.Getenv("cersorService")
+	//запрашиваем цензор
 	rr, err := http.Post(cersorService+"/check"+"?requestID="+getRequestID(ctx), "application/json", buf)
 	if err != nil {
 		return nil, err
@@ -76,6 +77,9 @@ func PostComment(ctx context.Context, c obj.Comment) (any, error) {
 		return nil, err
 	}
 	buf = bytes.NewBuffer(b)
+
+	//получаем из окружения адрес сервиса комментариев
+	commentsService := os.Getenv("commentsService")
 
 	r, err := http.Post(commentsService+"/add"+"?requestID="+getRequestID(ctx), "application/json", buf)
 	if err != nil {
@@ -106,6 +110,10 @@ func PostComment(ctx context.Context, c obj.Comment) (any, error) {
 
 //запрос для получения комментариев к новости
 func GetComments(ctx context.Context, id int) ([]obj.Comment, error) {
+	
+	//получаем из окружения адрес сервиса комментариев
+	commentsService := os.Getenv("commentsService")
+		
 	r, err := http.Get(commentsService + "/comments?postID=" + strconv.Itoa(id)+"&requestID="+getRequestID(ctx))
 	if err != nil {
 		return nil, err
@@ -132,6 +140,10 @@ func GetComments(ctx context.Context, id int) ([]obj.Comment, error) {
 
 //запрос для получения новости
 func GetPost(ctx context.Context, id int) (*obj.NewsFullDetailed, error) {
+	
+	//получаем из окружения адрес агрегатора новостей
+	newsAggregator := os.Getenv("newsAggregator")
+	//запрашиваем агрегатор
 	r, err := http.Get(newsAggregator + "/news?postID=" + strconv.Itoa(id)+"&requestID="+getRequestID(ctx))
 	if err != nil {
 		return nil, err
@@ -225,6 +237,9 @@ type postResponse struct {
 // запрашивает сервис аггрегатора новостей с поисковым запросом
 func SearchPosts(ctx context.Context, searchParam string, pageParam string) (any, error) {
 
+	//получаем из окружения адрес агрегатора новостей
+	newsAggregator := os.Getenv("newsAggregator")
+	//запрашиваем агрегатор
 	reqStr := newsAggregator + "/news?requestID=" + getRequestID(ctx)
 
 	if searchParam != "" {
